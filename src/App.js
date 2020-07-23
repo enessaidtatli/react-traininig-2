@@ -3,6 +3,12 @@ import Navi from "./Navi";
 import CategoryList from "./CategoryList";
 import ProductList from "./ProductList";
 import { Container, Row, Col } from "reactstrap";
+import alertify from "alertifyjs";
+import { Switch, Route } from "react-router-dom";
+import NotFound from "./NotFound";
+import CartList from "./CartList";
+import FormDemo1 from "./FormDemo1";
+import FormDemo2 from "./FormDemo2";
 
 export default class App extends Component {
   state = {
@@ -13,22 +19,28 @@ export default class App extends Component {
 
   addToCard = (product) => {
     let newCard = this.state.cart;
-    console.log("newCard", newCard)
-    var addedItem = newCard.find(c => c.product.id === product.id);
-    console.log("addedItem", addedItem)
-    if(addedItem){
+    var addedItem = newCard.find((c) => c.product.id === product.id);
+
+    if (addedItem) {
       addedItem.quantity += 1;
-      console.log("addedItem.quantity", addedItem.quantity)
-    }else{
+    } else {
       newCard.push({ product: product, quantity: 1 });
-      console.log("newCard", newCard)
     }
-    
+
     this.setState({
       cart: newCard,
     });
 
-    console.log("this.state.card", this.state.cart.length)
+    alertify.success(product.productName + " " + "Added to Cart", 3);
+  };
+
+  removeFromCart = (product) => {
+    const { cart } = this.state;
+    let newCart = cart.filter((cartItem) => cartItem.product.id !== product.id);
+    this.setState({
+      cart: newCart,
+    });
+    alertify.error(product.productName + " " + "Removed From Cart", 3);
   };
 
   componentDidMount() {
@@ -62,7 +74,7 @@ export default class App extends Component {
     return (
       <div>
         <Container>
-          <Navi cart={this.state.cart}/>
+          <Navi removeFromCart={this.removeFromCart} cart={this.state.cart} />
           <Row>
             <Col xs="3">
               <CategoryList
@@ -72,12 +84,35 @@ export default class App extends Component {
               />
             </Col>
             <Col xs="9">
-              <ProductList
-                addToCard={this.addToCard}
-                products={this.state.products}
-                currentCategory={this.state.currentCategory}
-                info={productInfo}
-              />
+              <Switch>
+                <Route
+                  exact
+                  path="/"
+                  render={(props) => (
+                    <ProductList
+                      {...props}
+                      addToCard={this.addToCard}
+                      products={this.state.products}
+                      currentCategory={this.state.currentCategory}
+                      info={productInfo}
+                    />
+                  )}
+                />
+                <Route
+                  exact
+                  path="/cart"
+                  render={(props) => (
+                    <CartList
+                      {...props}
+                      cart={this.state.cart}
+                      removeFromCart={this.removeFromCart}
+                    />
+                  )}
+                />
+                <Route exact path="/form1" component={FormDemo1}/>
+                <Route exact path="/form2" component={FormDemo2}/>
+                <Route component={NotFound} />
+              </Switch>
             </Col>
           </Row>
         </Container>
